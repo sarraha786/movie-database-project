@@ -3,7 +3,7 @@ import os
 import sqlite3
 import unittest
 
-#worked with Katie Lyngklip
+# By Katie Lyngklip and Sarrah Ahmed
 
 def get_restaurant_data(db_filename):
     """
