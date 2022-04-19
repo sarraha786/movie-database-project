@@ -21,15 +21,26 @@ def get_top_movies():
          x=soup.find_all('td', class_='titleColumn')
          for i in x: 
              print(i.find('a').text)
-             
+
+#the year it was released, rating
       
             
 
+#def get_youtube_info():
+
+
+
+#This function is going to search each movie +trailer, get stats: likes, dislikes, views, comments
 
 
 
 
 
+
+#Reddit, work on later
+
+
+#visuulization
 def main():
     get_top_movies()
 
