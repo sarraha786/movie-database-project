@@ -1,3 +1,4 @@
+import dataclasses
 import matplotlib.pyplot as plt
 import os
 import sqlite3
@@ -23,7 +24,7 @@ def get_top_movies():
     if page.ok:
          soup = BeautifulSoup(page.content, 'html.parser')
          #print(soup.prettify())
-         imdb_dict={}
+         
          movies=[]
          x=soup.find_all('td', class_='titleColumn')
          for i in x: 
@@ -33,27 +34,37 @@ def get_top_movies():
          years=[]
          y=soup.find_all('span',class_='secondaryInfo')
          for i in y:
-             
-             years.append(int(i).text.replace("(","").replace(")",""))
-        
+             year_no_parenth=i.text.replace("(","").replace(")","")
+             years.append(int(year_no_parenth))
+
+         
          rating_lst=[]
          ratings=soup.find_all('td',class_='ratingColumn imdbRating')
          for rating in ratings:
-             
-             rating_lst.append(float(rating).text.strip())
-         
-         for movie in movies:
-             for year in years:
-                 for rating in rating_lst:
-                     imdb_dict[movie]=year,rating
-         print(imdb_dict)
-#         cur.execute("DROP TABLE IF EXISTS Movies")
-    #      cur.execute("CREATE TABLE Movies ('title' TEXT PRIMARY KEY, 'year' INTEGER, 'rating' NUMBER)")
-    #      for i in range(len(species)):
-    #          cur.execute("INSERT INTO Species (id,title) VALUES (?,?)",(i,species[i]))
-    # conn.commit()
+             rating_num=rating.text.strip()
+             rating_lst.append(float(rating_num))
 
-#the year it was released, rating
+         final_tuple=(list(zip(movies,years, rating_lst)))
+        
+         return final_tuple
+        
+def movies_table(data,cur,conn):
+   print(data[0])
+   cur.execute('DROP TABLE IF EXISTS Movies')
+   cur.execute('CREATE TABLE Movies (Name TEXT PRIMARY KEY, Year INTEGER, Rating NUMBER)')
+   for tup in data:
+       cur.execute('INSERT OR IGNORE INTO Movies (Name,Year,Rating) VALUES (?,?,?)', (tup[0], tup[1],tup[2]))
+   conn.commit()
+   
+#    for tup in data: 
+#        name = tup[0]
+#        year=tup[1]
+#        rating=tup[2]
+#    for i in range(len(data)):
+#        cur.execute('INSERT OR IGNORE INTO Movies (Name,Year,Rating) VALUES (?,?,?)', (name, year,rating))
+#    conn.commit()
+
+
       
             
 
@@ -73,8 +84,10 @@ def get_top_movies():
 
 #visuulization
 def main():
-    get_top_movies()
-    setUpDatabase('final_project_db')
+
+    cur, conn = setUpDatabase('final_project_db.db')
+    movie_tuples=get_top_movies()
+    movies_table(movie_tuples, cur, conn)
 main()
 #class TestCases(unittest.TestCase):
     
