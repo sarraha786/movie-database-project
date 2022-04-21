@@ -55,16 +55,29 @@ def movies_table(data,cur,conn):
    for tup in data:
        cur.execute('INSERT OR IGNORE INTO Movies (Name,Year,Rating) VALUES (?,?,?)', (tup[0], tup[1],tup[2]))
    conn.commit()
-   
-#    for tup in data: 
-#        name = tup[0]
-#        year=tup[1]
-#        rating=tup[2]
-#    for i in range(len(data)):
-#        cur.execute('INSERT OR IGNORE INTO Movies (Name,Year,Rating) VALUES (?,?,?)', (name, year,rating))
-#    conn.commit()
 
+   cur.execute('SELECT COUNT Movies.year ON Movies.year WHERE Movies.year>2015')
+   x=cur.fetchall()
+   print(x)
+    # cur.execute('SELECT categories.category,COUNT(restaurants.category_id) FROM categories JOIN restaurants ON categories.id=restaurants.category_id GROUP BY category ')
+    # x=cur.fetchall()
+    
+    # dic={}
+    # for row in x:
+    #     dic[row[0]]=row[1]
+    # print(dic)
 
+    # y_axis = list(dic.keys())
+    # x_axis = list(dic.values())
+
+#     Tasks = [300,500,700]
+
+# my_labels = '2021','2020','2019','2018','2017','2016'
+
+# plt.pie(Tasks,labels=my_labels,autopct='%1.1f%%')
+# plt.title('My Tasks')
+# plt.axis('equal')
+# plt.show()
       
             
 
@@ -83,6 +96,15 @@ def movies_table(data,cur,conn):
 
 
 #visuulization
+
+#def write_csv(data, filename):
+
+
+
+
+
+
+
 def main():
 
     cur, conn = setUpDatabase('final_project_db.db')
