@@ -56,30 +56,33 @@ def movies_table(data,cur,conn):
        cur.execute('INSERT OR IGNORE INTO Movies (Name,Year,Rating) VALUES (?,?,?)', (tup[0], tup[1],tup[2]))
    conn.commit()
 
-   cur.execute('SELECT COUNT Movies.year ON Movies.year WHERE Movies.year>2015')
+   cur.execute('SELECT Year FROM Movies WHERE Year>2015')
    x=cur.fetchall()
-   print(x)
-    # cur.execute('SELECT categories.category,COUNT(restaurants.category_id) FROM categories JOIN restaurants ON categories.id=restaurants.category_id GROUP BY category ')
-    # x=cur.fetchall()
-    
-    # dic={}
-    # for row in x:
-    #     dic[row[0]]=row[1]
-    # print(dic)
+  
+   dic={}
+   for year in x:
+       if year[0] in dic:
+           dic[year[0]]+=1
+       else:
+           dic[year[0]]=1
+#    print(dic)
+   my_labels=list(dic.keys())
+   
+   values=list(dic.values())
+   
+   colors=['yellow','green','orange','pink','blue','turquoise','red']
 
-    # y_axis = list(dic.keys())
-    # x_axis = list(dic.values())
+  # plt.pie(values, my_labels,autopct='%1.1f%%',shadow=True,startangle=90,colors=colors)
+   plt.pie(values,labels = my_labels,autopct='%1.1f%%',colors=colors)
+   plt.title('How many top movies are from the last five years',color='red')
+   plt.axis('equal')
+   plt.show()
+   
+  
 
-#     Tasks = [300,500,700]
 
-# my_labels = '2021','2020','2019','2018','2017','2016'
 
-# plt.pie(Tasks,labels=my_labels,autopct='%1.1f%%')
-# plt.title('My Tasks')
-# plt.axis('equal')
-# plt.show()
-      
-            
+
 
 #def get_youtube_info():
 
