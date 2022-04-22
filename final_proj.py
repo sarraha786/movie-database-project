@@ -80,7 +80,7 @@ def movies_table(data,cur,conn):
    
   
 
-
+   
 
 
 
