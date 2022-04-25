@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 import requests
 import re
 import json
+from rotten_tomatoes_client import RottenTomatoesClient
 
 # By Katie Lyngklip and Sarrah Ahmed
 def setUpDatabase(db_name):
@@ -167,6 +168,61 @@ def write_movietrailer_table(csv_file, cur, con):
 
 
     return None
+   print(data[0])
+   cur.execute('DROP TABLE IF EXISTS Movies')
+   cur.execute('CREATE TABLE Movies (Name TEXT PRIMARY KEY, Year INTEGER, Rating NUMBER)')
+   for tup in data:
+       cur.execute('INSERT OR IGNORE INTO Movies (Name,Year,Rating) VALUES (?,?,?)', (tup[0], tup[1],tup[2]))
+   conn.commit()
+
+   cur.execute('SELECT Year FROM Movies WHERE Year>2015')
+   x=cur.fetchall()
+  
+   dic={}
+   for year in x:
+       if year[0] in dic:
+           dic[year[0]]+=1
+       else:
+           dic[year[0]]=1
+
+   my_labels=list(dic.keys())
+   
+   values=list(dic.values())
+   
+   colors=['yellow','green','orange','pink','blue','turquoise','red']
+
+  # plt.pie(values, my_labels,autopct='%1.1f%%',shadow=True,startangle=90,colors=colors)
+   plt.pie(values,labels = my_labels,autopct='%1.1f%%',colors=colors)
+   plt.title('How many top movies are from the last five years',color='red')
+   plt.axis('equal')
+   #plt.show()
+   
+   cur.execute('SELECT Name,Rating FROM Movies')
+   y=cur.fetchall()
+   
+   rating_dic={}
+   for row in y:
+       
+       movie=row[0]
+       rating=row[1]
+       rating_dic[movie]=rating
+   sorted_ratings=dict(sorted(rating_dic.items(), key=lambda item: item[1], reverse=True))
+   #print(sorted_ratings)
+   return sorted_ratings
+
+
+def get_rotten_score(top_titles):
+
+    #result=RottenTomatoesClient.search(term='The Batman',limit=1)
+  
+     for title in top_titles.keys():
+         result=RottenTomatoesClient.search(term=title, limit=1)
+         print(result)
+    #     #contents = json.loads(result)
+    # print(result)
+   
+
+
 
 def youtube_visualizations():
     "This function will work to visualize the data collected from youtube on the trailer. Specify specific visualizations here."
@@ -174,6 +230,27 @@ def youtube_visualizations():
 
 
 #visulization
+
+#This function is going to search each movie +trailer, get stats: likes, dislikes, views, comments
+
+
+
+
+
+
+#Reddit, work on later
+
+
+#visuulization
+
+#def write_csv(data, filename):
+
+
+
+
+
+
+
 def main():
     cur, conn = setUpDatabase('final_project_db.db')
     movie_tuples=get_top_movies()
@@ -191,6 +268,9 @@ def main():
     #writing_movie_info(movies, 69, 100)
     print(write_movietrailer_table('yt_trailer_data.csv', cur, conn))
         
+    top_titles = movies_table(movie_tuples, cur, conn)
+    get_rotten_score(top_titles)
+
 main()
 #class TestCases(unittest.TestCase):
     
