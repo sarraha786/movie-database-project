@@ -106,7 +106,6 @@ def get_youtube_info(movie_name):
         id=video_id)
     response2 = request.execute()
     # trailer's statistics on youtube 
-    print(response2)
     viewcount = int(response2['items'][0]['statistics']['viewCount'])
     likecount = int(response2['items'][0]['statistics']['likeCount'])
     dislikecount = viewcount - likecount
@@ -165,27 +164,7 @@ def write_movietrailer_table(csv_file, cur, con):
     cur.execute('DROP TABLE IF EXISTS Trailer_Stats')
     cur.execute('CREATE TABLE Trailer_Stats (trailer_title TEXT PRIMARY KEY, viewcount INTEGER, likecount INTEGER, dislikecount INTEGER)')
     
-
-
     return None
-   print(data[0])
-   cur.execute('DROP TABLE IF EXISTS Movies')
-   cur.execute('CREATE TABLE Movies (Name TEXT PRIMARY KEY, Year INTEGER, Rating NUMBER)')
-   for tup in data:
-       cur.execute('INSERT OR IGNORE INTO Movies (Name,Year,Rating) VALUES (?,?,?)', (tup[0], tup[1],tup[2]))
-   conn.commit()
-
-   cur.execute('SELECT Year FROM Movies WHERE Year>2015')
-   x=cur.fetchall()
-  
-   dic={}
-   for year in x:
-       if year[0] in dic:
-           dic[year[0]]+=1
-       else:
-           dic[year[0]]=1
-
-   my_labels=list(dic.keys())
    
    values=list(dic.values())
    
@@ -227,28 +206,6 @@ def get_rotten_score(top_titles):
 def youtube_visualizations():
     "This function will work to visualize the data collected from youtube on the trailer. Specify specific visualizations here."
     pass
-
-
-#visulization
-
-#This function is going to search each movie +trailer, get stats: likes, dislikes, views, comments
-
-
-
-
-
-
-#Reddit, work on later
-
-
-#visuulization
-
-#def write_csv(data, filename):
-
-
-
-
-
 
 
 def main():
