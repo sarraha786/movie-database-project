@@ -89,7 +89,7 @@ def get_youtube_info(movie_name):
     (2.) We then use the api to get the movie trailer's statistics 
     The function returns a list with the movie's statistics [view count, like count, dislike count, favorite count, comment count"""
 
-    API_KEY = 'AIzaSyBNZLCgKsC_QmsuGREa2CCKA2Mqd8Ep6JY'
+    API_KEY = 'AIzaSyC-2nikcshTBTeqZpjONjnfi5Fg9mz4E6I'
     youtube_api = googleapiclient.discovery.build("youtube", "v3", developerKey = API_KEY)
     trailer_name = str(movie_name) + ' Trailer'
     # api request 1 to get the trailer video info for each movie on the top 100 list
@@ -153,36 +153,35 @@ def write_movietrailer_table(csv_file, cur, conn):
     """This function will write the youtube statistics for each movie trailer in a database from a csv file and the rows of the 
     database will include movie id, trailer name, view count, like count, dislike count."""
 
-    # read csv file
-    test = []
-    with open(csv_file, 'r') as f:
-        file = csv.reader(f)
-        for lines in file:
-            print(lines)
-            test.append(lines)
-
     # create database with data from csv file
 
     cur.execute('DROP TABLE IF EXISTS Trailer_Stats')
-    cur.execute('CREATE TABLE Trailer_Stats (trailer_title TEXT PRIMARY KEY, viewcount INTEGER, likecount INTEGER, dislikecount INTEGER)')
-    
-    return lines
+    cur.execute('CREATE TABLE Trailer_Stats (title TEXT PRIMARY KEY, viewcount INTEGER, likecount INTEGER, dislikecount INTEGER)')
 
-#def get_rotten_score(top_titles):
+    # read csv file
+    with open(csv_file, 'r') as f:
+        file = csv.reader(f)
+        n = 0
+        for line in file:
+            n+=1
+            print(line)
+            title = line[0]
+            viewcount = line[1]
+            likecount = line[2]
+            dislikecount = line[3]
+            cur.execute('INSERT OR IGNORE INTO Trailer_Stats (title,viewcount,likecount, dislikecount) VALUES (?,?,?, ?)', (title, viewcount, likecount, dislikecount))
+    print(n)
+    conn.commit()
+            
 
-    #result=RottenTomatoesClient.search(term='The Batman',limit=1)
-  
-     #for title in top_titles.keys():
-    #     result=RottenTomatoesClient.search(term=title, limit=1)
-     #    print(result)
-    #     #contents = json.loads(result)
-    # print(result)
-   
-
-
+    return None
 
 def youtube_visualizations():
     "This function will work to visualize the data collected from youtube on the trailer. Specify specific visualizations here."
+    pass
+
+def tmdb_api():
+    
     pass
 
 
@@ -200,11 +199,8 @@ def main():
     # call functions to write trailer info for each trailer in csv file
     #writing_movie_info(movies, 0, 34)
     #writing_movie_info(movies, 34, 69)
-    #writing_movie_info(movies, 69, 100)
+    #writing_movie_info(movies, 69, 100) 
     lines = write_movietrailer_table('yt_trailer_data.csv', cur, conn)
-    print(lines)
-    print('test')
-        
     #top_titles = movies_table(movie_tuples, cur, conn)
     #get_rotten_score(top_titles)
 
