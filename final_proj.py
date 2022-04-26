@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import os
 import sqlite3
 import unittest
-import youtube_dl
 from xml.sax import parseString
 import googleapiclient.discovery
 import csv
@@ -13,7 +12,7 @@ from bs4 import BeautifulSoup
 import requests
 import re
 import json
-#from rotten_tomatoes_client import RottenTomatoesClient
+
 
 # By Katie Lyngklip and Sarrah Ahmed
 def setUpDatabase(db_name):
@@ -31,8 +30,12 @@ def get_top_movies():
         #print(soup.prettify())
          
         movies=[]
+        movie_id=[]
+        n = 0
         x=soup.find_all('td', class_='titleColumn')
         for i in x: 
+            n += 1
+            movie_id.append(n)
             movies.append(i.find('a').text)
          
 
@@ -49,13 +52,16 @@ def get_top_movies():
             rating_num=rating.text.strip()
             rating_lst.append(float(rating_num))
 
-        final_tuple=(list(zip(movies,years, rating_lst)))
+        final_tuple=(list(zip(movie_id,movies,years, rating_lst)))
+        print(final_tuple)
         return final_tuple
         
 def movies_table(data,cur,conn):
     print(data[0])
     cur.execute('DROP TABLE IF EXISTS Movies')
-    cur.execute('CREATE TABLE Movies (Name TEXT PRIMARY KEY, Year INTEGER, Rating NUMBER)')
+    cur.execute('CREATE TABLE Movies (Name PRIMARY KEY, Year INTEGER, Rating NUMBER)')
+   #cur.execute('SELECT Count(*) From Name')
+    movie_id = 0
     for tup in data:
         cur.execute('INSERT OR IGNORE INTO Movies (Name,Year,Rating) VALUES (?,?,?)', (tup[0], tup[1],tup[2]))
     conn.commit()
@@ -164,24 +170,20 @@ def write_movietrailer_table(csv_file, cur, conn):
         n = 0
         for line in file:
             n+=1
-            print(line)
-            title = line[0]
+            title = line[0][:-8]
             viewcount = line[1]
             likecount = line[2]
             dislikecount = line[3]
             cur.execute('INSERT OR IGNORE INTO Trailer_Stats (title,viewcount,likecount, dislikecount) VALUES (?,?,?, ?)', (title, viewcount, likecount, dislikecount))
-    print(n)
     conn.commit()
-            
-
-    return None
 
 def youtube_visualizations():
     "This function will work to visualize the data collected from youtube on the trailer. Specify specific visualizations here."
     pass
 
 def tmdb_api():
-    
+    API_KEY = ''
+    tmdbapi = requests.get()
     pass
 
 
@@ -197,12 +199,11 @@ def main():
         movies.append(movie)
 
     # call functions to write trailer info for each trailer in csv file
-    #writing_movie_info(movies, 0, 34)
-    #writing_movie_info(movies, 34, 69)
-    #writing_movie_info(movies, 69, 100) 
-    lines = write_movietrailer_table('yt_trailer_data.csv', cur, conn)
-    #top_titles = movies_table(movie_tuples, cur, conn)
-    #get_rotten_score(top_titles)
+        #writing_movie_info(movies, 0, 34)
+        #writing_movie_info(movies, 34, 69)
+        #writing_movie_info(movies, 69, 100) 
+    
+    write_movietrailer_table('yt_trailer_data.csv', cur, conn)
 
 main()
 #class TestCases(unittest.TestCase):
