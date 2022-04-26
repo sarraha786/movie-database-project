@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 import requests
 import re
 import json
-from rotten_tomatoes_client import RottenTomatoesClient
+#from rotten_tomatoes_client import RottenTomatoesClient
 
 # By Katie Lyngklip and Sarrah Ahmed
 def setUpDatabase(db_name):
@@ -78,6 +78,7 @@ def movies_table(data,cur,conn):
     plt.title('How many top movies are from the last five years',color='red')
     plt.axis('equal')
     plt.show()
+    
 
            
 # Youtube API---> using the API to get number of views, ratings, etc
@@ -88,7 +89,7 @@ def get_youtube_info(movie_name):
     (2.) We then use the api to get the movie trailer's statistics 
     The function returns a list with the movie's statistics [view count, like count, dislike count, favorite count, comment count"""
 
-    API_KEY = 'AIzaSyAD2NINir17W0mXfiWF91_BdI-XYvbZwKc'
+    API_KEY = 'AIzaSyBNZLCgKsC_QmsuGREa2CCKA2Mqd8Ep6JY'
     youtube_api = googleapiclient.discovery.build("youtube", "v3", developerKey = API_KEY)
     trailer_name = str(movie_name) + ' Trailer'
     # api request 1 to get the trailer video info for each movie on the top 100 list
@@ -109,8 +110,7 @@ def get_youtube_info(movie_name):
     viewcount = int(response2['items'][0]['statistics']['viewCount'])
     likecount = int(response2['items'][0]['statistics']['likeCount'])
     dislikecount = viewcount - likecount
-    favoritecount = int(response2['items'][0]['statistics']['favoriteCount'])
-    return [trailer_name, viewcount, likecount, dislikecount, favoritecount]
+    return [trailer_name, viewcount, likecount, dislikecount]
 
 def writecsv_w_ytdata(data):
     """this function will take in a list of trailer stats and them in a csv file because we will need to collect this data 
@@ -149,12 +149,12 @@ def writing_movie_info(movie_lst, start_point, end_point):
     return None
     
 
-def write_movietrailer_table(csv_file, cur, con):
+def write_movietrailer_table(csv_file, cur, conn):
     """This function will write the youtube statistics for each movie trailer in a database from a csv file and the rows of the 
-    database will include movie id, trailer name, view count, like count, dislike count, favorite count, comment count."""
+    database will include movie id, trailer name, view count, like count, dislike count."""
 
     # read csv file
-    with open(csv_file, 'w') as f:
+    with open(csv_file, 'r') as f:
         file = csv.reader(f)
         for lines in file:
             print(lines)
@@ -165,38 +165,14 @@ def write_movietrailer_table(csv_file, cur, con):
     cur.execute('CREATE TABLE Trailer_Stats (trailer_title TEXT PRIMARY KEY, viewcount INTEGER, likecount INTEGER, dislikecount INTEGER)')
     
     return None
-   
-   values=list(dic.values())
-   
-   colors=['yellow','green','orange','pink','blue','turquoise','red']
 
-  # plt.pie(values, my_labels,autopct='%1.1f%%',shadow=True,startangle=90,colors=colors)
-   plt.pie(values,labels = my_labels,autopct='%1.1f%%',colors=colors)
-   plt.title('How many top movies are from the last five years',color='red')
-   plt.axis('equal')
-   #plt.show()
-   
-   cur.execute('SELECT Name,Rating FROM Movies')
-   y=cur.fetchall()
-   
-   rating_dic={}
-   for row in y:
-       
-       movie=row[0]
-       rating=row[1]
-       rating_dic[movie]=rating
-   sorted_ratings=dict(sorted(rating_dic.items(), key=lambda item: item[1], reverse=True))
-   #print(sorted_ratings)
-   return sorted_ratings
-
-
-def get_rotten_score(top_titles):
+#def get_rotten_score(top_titles):
 
     #result=RottenTomatoesClient.search(term='The Batman',limit=1)
   
-     for title in top_titles.keys():
-         result=RottenTomatoesClient.search(term=title, limit=1)
-         print(result)
+     #for title in top_titles.keys():
+    #     result=RottenTomatoesClient.search(term=title, limit=1)
+     #    print(result)
     #     #contents = json.loads(result)
     # print(result)
    
@@ -225,8 +201,8 @@ def main():
     #writing_movie_info(movies, 69, 100)
     print(write_movietrailer_table('yt_trailer_data.csv', cur, conn))
         
-    top_titles = movies_table(movie_tuples, cur, conn)
-    get_rotten_score(top_titles)
+    #top_titles = movies_table(movie_tuples, cur, conn)
+    #get_rotten_score(top_titles)
 
 main()
 #class TestCases(unittest.TestCase):
