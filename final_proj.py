@@ -154,17 +154,19 @@ def write_movietrailer_table(csv_file, cur, conn):
     database will include movie id, trailer name, view count, like count, dislike count."""
 
     # read csv file
+    test = []
     with open(csv_file, 'r') as f:
         file = csv.reader(f)
         for lines in file:
             print(lines)
+            test.append(lines)
 
     # create database with data from csv file
 
     cur.execute('DROP TABLE IF EXISTS Trailer_Stats')
     cur.execute('CREATE TABLE Trailer_Stats (trailer_title TEXT PRIMARY KEY, viewcount INTEGER, likecount INTEGER, dislikecount INTEGER)')
     
-    return None
+    return lines
 
 #def get_rotten_score(top_titles):
 
@@ -199,7 +201,9 @@ def main():
     #writing_movie_info(movies, 0, 34)
     #writing_movie_info(movies, 34, 69)
     #writing_movie_info(movies, 69, 100)
-    print(write_movietrailer_table('yt_trailer_data.csv', cur, conn))
+    lines = write_movietrailer_table('yt_trailer_data.csv', cur, conn)
+    print(lines)
+    print('test')
         
     #top_titles = movies_table(movie_tuples, cur, conn)
     #get_rotten_score(top_titles)
