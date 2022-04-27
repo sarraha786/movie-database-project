@@ -1,4 +1,5 @@
 import dataclasses
+import string
 from tracemalloc import stop
 import numpy as np
 import matplotlib.pyplot as plt
@@ -77,7 +78,7 @@ def movies_table(data,cur,conn):
    conn.commit()
  
   
-def movie_viz(cur, conn):
+def movie_viz(cur):
    cur.execute('SELECT Year FROM Movies WHERE Year>2015')
    x=cur.fetchall()
    dic={}
@@ -99,11 +100,6 @@ def movie_viz(cur, conn):
 # Youtube API---> using the API to get number of views, ratings, etc
 
 def get_youtube_info(movie_name):
-    """This function uses the youtube api in two ways:
-    (1.) We use the api to search for the video id for each movie name's trailer
-    (2.) We then use the api to get the movie trailer's statistics 
-    The function returns a list with the movie's statistics [view count, like count, dislike count, favorite count, comment count"""
-
     API_KEY = 'AIzaSyDB0XXOOqGK6KMGqsUk0BqBL_Fg72Nx5Gw'
     youtube_api = googleapiclient.discovery.build("youtube", "v3", developerKey = API_KEY)
     trailer_name = str(movie_name) + ' Trailer'
@@ -128,9 +124,6 @@ def get_youtube_info(movie_name):
     return [trailer_name, viewcount, likecount, dislikecount]
 
 def writecsv_w_ytdata(data):
-    """this function will take in a list of trailer stats and them in a csv file because we will need to collect this data 
-    over 2-3 days since youtube limits the amount of data you can take per day"""
-
     with open('yt_trailer_data.csv', 'w') as f:
         writer = csv.writer(f)
         # make sure the data is a list of tuples of information from the youtube trailer api
@@ -140,9 +133,6 @@ def writecsv_w_ytdata(data):
     return None
 
 def writing_movie_info(movie_lst, start_point, end_point):
-    """This function will take in a list of movies and loop through each. The start point parameter is meant to help control how much data 
-    is written at a time. Using this function, I can control what part of the movies we loop through."""
-    
     # get a list of movies you want to write their trailer data in the csv file
     data = []
     n = 0
@@ -154,12 +144,24 @@ def writing_movie_info(movie_lst, start_point, end_point):
         else:
             n += 1
             continue
-    
     # get trailer data for each movie in specified list
     trailer_stats = []
-    for title in data: 
+    for title in data:
         trailer_stats.append(get_youtube_info(title))
     writecsv_w_ytdata(trailer_stats)
+
+    return None
+
+
+def requesting_yt_stats(movie_tuples):
+    movies = []
+    for tup in movie_tuples: 
+        movie = tup[1]
+        movies.append(movie) 
+
+        #writing_movie_info(movies, 0, 34)
+        #writing_movie_info(movies, 34, 69)
+        #writing_movie_info(movies, 69, 100) 
     
     return None
 
@@ -195,8 +197,48 @@ def write_movietrailer_table(csv_data, cur, conn):
     for trailer_info in csv_data[start:start + 25]:
         cur.execute('INSERT OR IGNORE INTO Trailer_Stats (Id,title,viewcount,likecount,dislikecount) VALUES (?,?,?,?,?)', (trailer_info[0], trailer_info[1], trailer_info[2], trailer_info[3], trailer_info[4]))
     conn.commit()
-    
 
+def youtube_calc(cur):
+    """This function will select all the viewcounts, likecounts, and dislike counts. It will find the averages for each of these and
+    write them in a csv_file to show our calculations"""
+
+    cur.execute('SELECT viewcount, likecount, dislikecount FROM Trailer_Stats')
+    viewcount_total = 0
+    likes_total = 0
+    dislikes_total = 0
+    movie_total = 0
+    for row in cur:
+        movie_total += 1
+        viewcount_total += row[0]
+        likes_total += row[1]
+        dislikes_total += row[2]
+    
+    with open('youtube_calculations.csv', 'w') as f:
+        writer = csv.writer(f) 
+        average_views = f"The average number of views for the movie trailers was {viewcount_total/movie_total}"
+        average_likes = f"The average number of likes for the movie trailers was {likes_total/movie_total}"
+        average_dislikes = f"The average number of dislikes for the movie trailers was {dislikes_total/movie_total}"
+        for item in [average_views, average_likes, average_dislikes]:
+            writer.writerow([item])
+
+def youtube_viz(cur):
+    # bar graph: spider man graph: views, likes, dislikes 
+    cur.execute('SELECT title,viewcount,likecount,dislikecount FROM Trailer_Stats')
+    data = {}
+    for row in cur:
+        if row[0] == 'Spider-Man: No Way Home':
+            data['viewcount'] = row[1]
+            data['likecount'] = row[2]
+            data['dislikecount'] = row[3]
+    count_types = list(data.keys())
+    values = list(data.values())
+    fig = plt.figure(figsize = (10,5))
+    plt.bar(count_types, values, color='blue', width=0.5)
+    plt.xlabel("Trailer Statistics")
+    plt.ylabel("Count (in thousands)")
+    plt.title("Spider Man Trailer Movie Statistics")
+    plt.show()
+        
 def tmdb_api(movie_name):
     api = TMDb()
     api.api_key = '84800a5f39041de93dc3e66004914e00'
@@ -220,9 +262,6 @@ def tmdb_database_prep(movie_tuples):
     return output
 
 def tmdb_database(data, cur, conn):
-    """This function takes the data from the tmdb api and writes it in a database called TMDB 25 units at a time. Data is a list of lists, each representing
-    the data for each movie."""
-
     cur.execute('CREATE TABLE IF NOT EXISTS TMDB (Id INTEGER PRIMARY KEY, movie_name STRING, vote_average INTEGER, release_date INTEGER, original_language STRING, vote_count INTEGER, popularity INTEGER)')
     cur.execute('SELECT Id FROM TMDB WHERE Id=(SELECT MAX(Id) From TMDB)')
     start = cur.fetchone()
@@ -236,44 +275,55 @@ def tmdb_database(data, cur, conn):
     conn.commit()
     return None
 
-def tmdb_viz(cur, conn):
-    """This function will work to visualize the data collected from youtube on the trailer. Make three scatter plots one with views, one with likes,
-    and one with dislikes."""
-
+def tmdb_calculation(cur):
+    data = []
     cur.execute('SELECT Movies.Name, Movies.Rating, TMDB.vote_average FROM Movies JOIN TMDB ON Movies.Name = TMDB.movie_name GROUP BY Name')
     x=cur.fetchall()
-    #print(len(x))
-    #print(x)
-    
-    
+    for movie in x:
+        title = movie[0]
+        movie_rating = movie[1]
+        vote_average = movie[2]
+        data.append([title,round(abs(movie_rating-vote_average),2)])
+    with open('tmdb_calculations.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(['Movie Name', 'Absolute Value Difference Between Ratings from IMDB and TMDB'])
+        for item in data:
+            writer.writerow(item)
+    return None
+
+def tmdb_viz(cur):
+    data = {}
+    cur.execute('SELECT movie_name, vote_average,vote_count,popularity FROM TMDB')
+    for row in cur:
+        if row[0] == 'Spider-Man: No Way Home':
+            data['vote_count'] = row[2]
+            data['popularity'] = row[3]
+    keys = list(data.keys())
+    values = list(data.values())
+    fig = plt.figure(figsize = (10,5))
+    plt.bar(keys, values, color='red', width=0.5)
+    plt.xlabel("TMDB Statistics")
+    plt.ylabel("Statistic Value")
+    plt.title("Spider Man Movie TMDB Statistics")
+    plt.show()
 
 def main():
     cur, conn = setUpDatabase('final_project_db.db')
     movie_tuples=get_top_movies('Top 250 Movies - IMDb.html')
     movies_table(movie_tuples, cur, conn)
-    #movie_viz(cur, conn)
+    #movie_viz(cur)
+    
+    # this function utilizes previously made functions to request movie trailer information for 100 of the movies in our movie list
+    requesting_yt_stats(movie_tuples) 
     csv_data = csv_reader('yt_trailer_data.csv')
     youtube_db = write_movietrailer_table(csv_data, cur, conn)
+    youtube_calc(cur)
+    #youtube_viz(cur)
+
     tmdb_data = tmdb_database_prep(movie_tuples)
     tmdb_database(tmdb_data, cur, conn)
-    tmdb_viz(cur,conn)
-    
-
-    # gets list of movies titles
-    movies = []
-    for tup in movie_tuples: 
-        movie = tup[1]
-        movies.append(movie)
-    
-
-    
-    # call functions to write trailer info for each trailer in csv file
-        #writing_movie_info(movies, 0, 34)
-        #writing_movie_info(movies, 34, 69)
-        #writing_movie_info(movies, 69, 100) 
-    
-    #yt_visualizations = youtube_visualizations(cur, conn)
-    #print(yt_visualizations)
+    tmdb_calculation(cur)
+    #tmdb_viz(cur)
 
 main()
 #class TestCases(unittest.TestCase):
